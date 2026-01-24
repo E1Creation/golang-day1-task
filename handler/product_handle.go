@@ -1,0 +1,63 @@
+package handler
+
+import (
+	"encoding/json"
+	"net/http"
+	"strconv"
+	"strings"
+
+	"kasir-api/model"
+	"kasir-api/store"
+	"kasir-api/util"
+)
+
+func ProdukHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		util.JSON(w, http.StatusOK, store.ProdukData)
+
+	case http.MethodPost:
+		var p model.Produk
+		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+			util.Error(w, http.StatusBadRequest, "Invalid request")
+			return
+		}
+		p.ID = len(store.ProdukData) + 1
+		store.ProdukData = append(store.ProdukData, p)
+		util.JSON(w, http.StatusCreated, p)
+	}
+}
+
+func ProdukByIDHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/produk/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		util.Error(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
+	for i, p := range store.ProdukData {
+		if p.ID == id {
+			switch r.Method {
+			case http.MethodGet:
+				util.JSON(w, http.StatusOK, p)
+				return
+
+			case http.MethodPut:
+				var update model.Produk
+				json.NewDecoder(r.Body).Decode(&update)
+				update.ID = id
+				store.ProdukData[i] = update
+				util.JSON(w, http.StatusOK, update)
+				return
+
+			case http.MethodDelete:
+				store.ProdukData = append(store.ProdukData[:i], store.ProdukData[i+1:]...)
+				util.JSON(w, http.StatusOK, map[string]string{"message": "deleted"})
+				return
+			}
+		}
+	}
+
+	util.Error(w, http.StatusNotFound, "Produk tidak ditemukan")
+}
