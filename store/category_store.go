@@ -1,8 +1,8 @@
 package store
 
-import "kasir-api/model"
+import "kasir-api/models"
 
-var CategoryData = []model.Category{
-	{ID: 1, Nama: "Makanan"},
-	{ID: 2, Nama: "Minuman"},
+var CategoryData = []models.Category{
+	{ID: 1, Name: "Makanan"},
+	{ID: 2, Name: "Minuman"},
 }
