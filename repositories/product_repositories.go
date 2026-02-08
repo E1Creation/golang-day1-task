@@ -15,15 +15,25 @@ func NewProductRepository(db *sql.DB) *ProductRepository {
 	return &ProductRepository{db: db}
 }
 
-func (repo *ProductRepository) GetAll() ([]models.Product, error) {
+func (repo *ProductRepository) GetAll(nameFilter string) ([]models.Product, error) {
 	query := "SELECT id, name, price, stock FROM products"
 	log.Printf("get query")
-	rows, err := repo.db.Query(query)
-	log.Printf("after query")
+	args := []interface{}{}
+	if nameFilter != "" {
+		query += " WHERE p.name ILIKE $1"
+		args = append(args, "%"+nameFilter+"%")
+	}
+
+	rows, err := repo.db.Query(query, args...)
 	if err != nil {
-		log.Printf("error query: %s", err)
 		return nil, err
 	}
+	// rows, err := repo.db.Query(query)
+	// log.Printf("after query")
+	// if err != nil {
+	// 	log.Printf("error query: %s", err)
+	// 	return nil, err
+	// }
 	defer rows.Close()
 
 	products := make([]models.Product, 0)
